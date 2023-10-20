@@ -40,3 +40,7 @@ def update_one(
         .modified_count
         == 1
     )
+
+
+def delete_one(collection: str, filters: dict) -> bool:
+    return db.get_collection(collection).delete_one(filters, filters).deleted_count == 1
