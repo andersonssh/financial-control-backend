@@ -14,7 +14,7 @@ registers_router = APIRouter(prefix="/registers", tags=["users"])
 
 
 @registers_router.post("/", status_code=201)
-def post_registers(register: PostRegister):
+def post_registers(register: PostRegister) -> RegisterModel:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
     new_register = RegisterModel(
         **register.model_dump(exclude_unset=True),
@@ -28,14 +28,14 @@ def post_registers(register: PostRegister):
 
 
 @registers_router.get("/")
-def get_registers():
+def get_registers() -> GetRegisters:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
     registers = database.find("registers", {"user_id": user_id})
     return GetRegisters(data=registers).model_dump(exclude_unset=True)
 
 
 @registers_router.patch("/{register_id}", status_code=204)
-def patch_register(register_id: str, register: PatchRegister):
+def patch_register(register_id: str, register: PatchRegister) -> None:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
 
     database.update_one(
@@ -43,12 +43,12 @@ def patch_register(register_id: str, register: PatchRegister):
         {"_id": ObjectId(register_id), "user_id": user_id},
         register.model_dump(exclude_unset=True),
     )
-    return {}
+    return None
 
 
 @registers_router.delete("/{register_id}", status_code=204)
-def delete_register(register_id: str):
+def delete_register(register_id: str) -> None:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
 
     database.delete_one("registers", {"user_id": user_id, "_id": ObjectId(register_id)})
-    return {}
+    return None
