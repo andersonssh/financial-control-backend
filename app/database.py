@@ -1,5 +1,4 @@
 import os
-import copy
 from typing import List
 
 from pymongo import MongoClient
@@ -26,8 +25,6 @@ def insert_one(collection: str, document: dict) -> dict | None:
     inserted_id = db.get_collection(collection).insert_one(document).inserted_id
     if not inserted_id:
         return None
-    document = copy.deepcopy(document)
-    document["_id"] = inserted_id
     return document
 
 

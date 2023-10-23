@@ -24,14 +24,14 @@ def post_registers(register: PostRegister) -> RegisterModel:
     inserted_document = database.insert_one(
         "registers", new_register.model_dump(exclude_unset=True)
     )
-    return RegisterModel(**inserted_document).model_dump(exclude_unset=True)
+    return RegisterModel(**inserted_document)
 
 
 @registers_router.get("/")
 def get_registers() -> GetRegisters:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
     registers = database.find("registers", {"user_id": user_id})
-    return GetRegisters(data=registers).model_dump(exclude_unset=True)
+    return GetRegisters(data=registers)
 
 
 @registers_router.patch("/{register_id}", status_code=204)
