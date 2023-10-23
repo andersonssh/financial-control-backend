@@ -1,31 +1,35 @@
-from datetime import datetime
+from typing import Any
 
 from bson.objectid import ObjectId
-from pydantic import BaseModel, ConfigDict, constr
-from pydantic.functional_validators import AfterValidator
-from typing_extensions import Annotated
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import core_schema
 
 REGEX_ISODATE = r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$"
 
 
-def object_id_validate(v: ObjectId | str) -> ObjectId | str:
-    assert ObjectId.is_valid(v), f"{v} is not a valid ObjectId"
-    if isinstance(v, str):
-        return ObjectId(v)
-    return str(v)
+class ObjectIdAnnotation:
+    @classmethod
+    def validate_object_id(cls, v: Any, handler) -> ObjectId:
+        if isinstance(v, ObjectId):
+            return v
 
+        s = handler(v)
+        if ObjectId.is_valid(s):
+            return ObjectId(s)
+        else:
+            raise ValueError("Invalid ObjectId")
 
-def datetime_validate(v: datetime | str) -> datetime | str:
-    if isinstance(v, str):
-        return datetime.fromisoformat(v)
-    return v.strftime("%Y-%m-%d %H:%M:%S")
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type, _handler
+    ) -> core_schema.CoreSchema:
+        assert source_type is ObjectId
+        return core_schema.no_info_wrap_validator_function(
+            cls.validate_object_id,
+            core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
-
-PyObjectId = Annotated[ObjectId | str, AfterValidator(object_id_validate)]
-CustomDatetime = Annotated[
-    datetime | constr(pattern=REGEX_ISODATE), AfterValidator(datetime_validate)
-]
-
-
-class CustomModel(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    @classmethod
+    def __get_pydantic_json_schema__(cls, _core_schema, handler) -> JsonSchemaValue:
+        return handler(core_schema.str_schema())
