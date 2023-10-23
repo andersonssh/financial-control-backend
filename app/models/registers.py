@@ -47,7 +47,7 @@ class PostRegister(BaseModel):
         Annotated[
             ObjectId,
             ObjectIdAnnotation,
-            Field(examples=[["65354001a527d6e17d857228"]]),
+            Field(None, examples=[["65354001a527d6e17d857228"]]),
         ]
     ]
     amount: float = None
@@ -60,6 +60,6 @@ class PatchRegister(BaseModel):
     isRequired: bool = None
     percentage: confloat(gt=0, lt=1) = None
     percentageOn: List[Annotated[ObjectId, ObjectIdAnnotation]] = Field(
-        examples=[["65354001a527d6e17d857228"]]
+        None, examples=[["65354001a527d6e17d857228"]]
     )
     amount: float = None
