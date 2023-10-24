@@ -21,6 +21,12 @@ def find(collection: str, filters: dict = None, projection: dict = None) -> List
     return list(db.get_collection(collection).find(filters, projection))
 
 
+def find_one(
+    collection: str, filters: dict = None, projection: dict = None
+) -> dict | None:
+    return db.get_collection(collection).find_one(filters, projection)
+
+
 def insert_one(collection: str, document: dict) -> dict | None:
     inserted_id = db.get_collection(collection).insert_one(document).inserted_id
     if not inserted_id:
@@ -40,4 +46,4 @@ def update_one(
 
 
 def delete_one(collection: str, filters: dict) -> bool:
-    return db.get_collection(collection).delete_one(filters, filters).deleted_count == 1
+    return db.get_collection(collection).delete_one(filters).deleted_count == 1

@@ -1,6 +1,6 @@
 from bson.objectid import ObjectId
-from fastapi import APIRouter
-
+from fastapi import APIRouter, HTTPException
+from datetime import datetime
 from app import database
 from app.models.registers import (
     GetRegisters,
@@ -8,7 +8,6 @@ from app.models.registers import (
     PostRegister,
     RegisterModel,
 )
-from app.utils import get_now
 
 registers_router = APIRouter(prefix="/registers", tags=["users"])
 
@@ -16,14 +15,10 @@ registers_router = APIRouter(prefix="/registers", tags=["users"])
 @registers_router.post("/", status_code=201)
 def post_registers(register: PostRegister) -> RegisterModel:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
-    new_register = RegisterModel(
-        **register.model_dump(exclude_unset=True),
-        user_id=str(user_id),
-        created_at=get_now()
-    )
-    inserted_document = database.insert_one(
-        "registers", new_register.model_dump(exclude_unset=True)
-    )
+    new_register = register.model_dump(exclude_unset=True)
+    new_register["user_id"] = user_id
+    new_register["created_at"] = datetime.now()
+    inserted_document = database.insert_one("registers", new_register)
     return RegisterModel(**inserted_document)
 
 
@@ -38,11 +33,12 @@ def get_registers() -> GetRegisters:
 def patch_register(register_id: str, register: PatchRegister) -> None:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
 
-    database.update_one(
+    if not database.update_one(
         "registers",
         {"_id": ObjectId(register_id), "user_id": user_id},
         register.model_dump(exclude_unset=True),
-    )
+    ):
+        raise HTTPException(status_code=404, detail="Register not found")
     return None
 
 
@@ -50,5 +46,8 @@ def patch_register(register_id: str, register: PatchRegister) -> None:
 def delete_register(register_id: str) -> None:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
 
-    database.delete_one("registers", {"user_id": user_id, "_id": ObjectId(register_id)})
+    if not database.delete_one(
+        "registers", {"user_id": user_id, "_id": ObjectId(register_id)}
+    ):
+        raise HTTPException(status_code=404, detail="Register not found")
     return None
