@@ -1,65 +1,75 @@
-from datetime import datetime
-from typing import Annotated, List
+from typing import Annotated, Any, List
 
 from bson.objectid import ObjectId
 from pydantic import BaseModel, Field, confloat
 
-from app.models.base import ObjectIdAnnotation
+from app.models.base import ObjectIdAnnotation, SystemBaseModel
 
 
-class RegisterModel(BaseModel):
-    class Config:
-        json_encoders = {datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")}
+class RegisterBase:
+    description: str
+    category: str
+    isRequired: bool
 
+
+class AmountRegisterBase:
+    amount: float
+
+
+class AmountRegisterEmbeddedModel(BaseModel):
     id: Annotated[
         ObjectId,
         ObjectIdAnnotation,
         Field(alias="_id", examples=["6526b0e5b30dbe90dcd63192"]),
     ]
-    user_id: Annotated[
-        ObjectId,
-        ObjectIdAnnotation,
-        Field(examples=["6526b0e5b30dbe90dcd63192"]),
-    ]
-    created_at: datetime = Field(examples=["2000-01-01 00:00:00"])
-    description: str = None
-    category: str = None
-    isPercentage: bool = None
-    isRequired: bool = None
-    percentage: confloat(ge=0, le=1) = None
-    percentageOn: List[Annotated[ObjectId, ObjectIdAnnotation]] = Field(
-        None, examples=[["65354001a527d6e17d857228"]]
-    )
-    amount: float = None
-
-
-class GetRegisters(BaseModel):
-    data: List[RegisterModel]
-
-
-class PostRegister(BaseModel):
     category: str
-    description: str
-    isPercentage: bool
-    isRequired: bool
-    percentage: confloat(ge=0, le=1) = None
-    percentageOn: List[
-        Annotated[
-            ObjectId,
-            ObjectIdAnnotation,
-            Field(None, examples=[["65354001a527d6e17d857228"]]),
-        ]
-    ]
-    amount: float = None
+    amount: float
 
 
-class PatchRegister(BaseModel):
-    category: str = None
-    description: str = None
-    isPercentage: bool = None
-    isRequired: bool = None
-    percentage: confloat(gt=0, lt=1) = None
-    percentageOn: List[Annotated[ObjectId, ObjectIdAnnotation]] = Field(
-        None, examples=[["65354001a527d6e17d857228"]]
+class PercentageRegisterBase(BaseModel):
+    percentageOn: List[AmountRegisterEmbeddedModel] = None
+    percentage: confloat(ge=0, le=1)
+
+
+class RegisterModel(RegisterBase, SystemBaseModel):
+    pass
+
+
+class AmountRegisterModel(AmountRegisterBase, RegisterModel):
+    pass
+
+
+class PercentageRegisterModel(PercentageRegisterBase, RegisterModel):
+    pass
+
+
+class GetRegistersModel(BaseModel):
+    data: List[PercentageRegisterModel | AmountRegisterModel]
+
+
+class PostPutAmountRegisterModel(BaseModel, AmountRegisterBase):
+    pass
+
+
+class PostPutPercentageRegisterModel(PercentageRegisterBase, BaseModel):
+    pass
+
+
+if __name__ == "__main__":
+    print(
+        PostPutPercentageRegisterModel(
+            **{
+                "_id": "6526b0e5b30dbe90dcd63192",
+                "user_id": "6526b0e5b30dbe90dcd63192",
+                "created_at": "2000-01-01 00:00:00",
+                "description": "string",
+                "category": "string",
+                "isRequired": True,
+                "percentageOn": [
+                    {"_id": "6526b0e5b30dbe90dcd63192", "category": "oi", "amount": 0}
+                ],
+                "percentage": 1,
+                "amount": 0,
+            }
+        ).model_dump_json(by_alias=True)
     )
-    amount: float = None

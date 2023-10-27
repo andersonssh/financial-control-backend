@@ -1,6 +1,8 @@
-from typing import Any
+from datetime import datetime
+from typing import Annotated, Any
 
 from bson.objectid import ObjectId
+from pydantic import BaseModel, Field
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema
 
@@ -33,3 +35,27 @@ class ObjectIdAnnotation:
     @classmethod
     def __get_pydantic_json_schema__(cls, _core_schema, handler) -> JsonSchemaValue:
         return handler(core_schema.str_schema())
+
+
+class SystemBaseModel(BaseModel):
+    class Config:
+        json_encoders = {datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")}
+
+    id: Annotated[
+        ObjectId,
+        ObjectIdAnnotation,
+        Field(
+            default_factory=ObjectId, alias="_id", examples=["6526b0e5b30dbe90dcd63192"]
+        ),
+    ]
+    created_at: datetime = Field(
+        default_factory=datetime.now, examples=["2000-01-01 00:00:00"]
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.now, examples=["2000-01-01 00:00:00"]
+    )
+    user_id: Annotated[
+        ObjectId,
+        ObjectIdAnnotation,
+        Field(examples=["6526b0e5b30dbe90dcd63192"]),
+    ]
