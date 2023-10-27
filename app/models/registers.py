@@ -6,17 +6,17 @@ from pydantic import BaseModel, Field, confloat
 from app.models.base import ObjectIdAnnotation, SystemBaseModel
 
 
-class RegisterBase:
+class _RegisterBase:
     description: str
     category: str
     isRequired: bool
 
 
-class AmountRegisterBase:
+class _AmountRegisterBase:
     amount: float
 
 
-class AmountRegisterEmbeddedModel(BaseModel):
+class _AmountRegisterEmbeddedModel(BaseModel):
     id: Annotated[
         ObjectId,
         ObjectIdAnnotation,
@@ -26,20 +26,20 @@ class AmountRegisterEmbeddedModel(BaseModel):
     amount: float
 
 
-class PercentageRegisterBase(BaseModel):
-    percentageOn: List[AmountRegisterEmbeddedModel] = None
+class _PercentageRegisterBase(BaseModel):
+    percentageOn: List[_AmountRegisterEmbeddedModel] = None
     percentage: confloat(ge=0, le=1)
 
 
-class RegisterModel(RegisterBase, SystemBaseModel):
+class RegisterModel(_RegisterBase, SystemBaseModel):
     pass
 
 
-class AmountRegisterModel(AmountRegisterBase, RegisterModel):
+class AmountRegisterModel(_AmountRegisterBase, RegisterModel):
     pass
 
 
-class PercentageRegisterModel(PercentageRegisterBase, RegisterModel):
+class PercentageRegisterModel(_PercentageRegisterBase, RegisterModel):
     pass
 
 
@@ -47,11 +47,11 @@ class GetRegistersModel(BaseModel):
     data: List[PercentageRegisterModel | AmountRegisterModel]
 
 
-class PostPutAmountRegisterModel(BaseModel, AmountRegisterBase):
+class PostPutAmountRegisterModel(BaseModel, _AmountRegisterBase):
     pass
 
 
-class PostPutPercentageRegisterModel(PercentageRegisterBase, BaseModel):
+class PostPutPercentageRegisterModel(_PercentageRegisterBase, BaseModel):
     pass
 
 
