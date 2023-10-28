@@ -1,5 +1,3 @@
-from datetime import datetime
-from typing import Union
 
 from bson.objectid import ObjectId
 from fastapi import APIRouter, HTTPException
