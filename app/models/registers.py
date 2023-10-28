@@ -1,22 +1,12 @@
 from typing import Annotated, Any, List
 
 from bson.objectid import ObjectId
-from pydantic import BaseModel, Field, confloat
+from pydantic import BaseModel, Field, confloat, model_validator
 
 from app.models.base import ObjectIdAnnotation, SystemBaseModel
 
 
-class _RegisterBase:
-    description: str
-    category: str
-    isRequired: bool
-
-
-class _AmountRegisterBase:
-    amount: float
-
-
-class _AmountRegisterEmbeddedModel(BaseModel):
+class AmountRegisterEmbeddedModel(BaseModel):
     id: Annotated[
         ObjectId,
         ObjectIdAnnotation,
@@ -26,50 +16,35 @@ class _AmountRegisterEmbeddedModel(BaseModel):
     amount: float
 
 
-class _PercentageRegisterBase(BaseModel):
-    percentageOn: List[_AmountRegisterEmbeddedModel] = None
-    percentage: confloat(ge=0, le=1)
+class RegisterBaseModel(BaseModel):
+    description: str
+    category: str
+    isPercentage: bool
+    isRequired: bool
+    amount: float | None = None
+    percentageOn: List[AmountRegisterEmbeddedModel] | None = None
+    percentage: confloat(ge=0, le=1) | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def required_fields(cls, data: Any):
+        if data["isPercentage"]:
+            assert (
+                data.get("percentage") is not None
+            ), 'when isPercentage=true "percentage" must be set'
+            data["amount"] = None
+        else:
+            assert (
+                data.get("amount") is not None
+            ), 'when isPercentage=false "amount" must be set'
+            data["percentageOn"] = None
+            data["percentage"] = None
+        return data
 
 
-class RegisterModel(_RegisterBase, SystemBaseModel):
-    pass
-
-
-class AmountRegisterModel(_AmountRegisterBase, RegisterModel):
-    pass
-
-
-class PercentageRegisterModel(_PercentageRegisterBase, RegisterModel):
+class RegisterModel(RegisterBaseModel, SystemBaseModel):
     pass
 
 
 class GetRegistersModel(BaseModel):
-    data: List[PercentageRegisterModel | AmountRegisterModel]
-
-
-class PostPutAmountRegisterModel(BaseModel, _AmountRegisterBase):
-    pass
-
-
-class PostPutPercentageRegisterModel(_PercentageRegisterBase, BaseModel):
-    pass
-
-
-if __name__ == "__main__":
-    print(
-        PostPutPercentageRegisterModel(
-            **{
-                "_id": "6526b0e5b30dbe90dcd63192",
-                "user_id": "6526b0e5b30dbe90dcd63192",
-                "created_at": "2000-01-01 00:00:00",
-                "description": "string",
-                "category": "string",
-                "isRequired": True,
-                "percentageOn": [
-                    {"_id": "6526b0e5b30dbe90dcd63192", "category": "oi", "amount": 0}
-                ],
-                "percentage": 1,
-                "amount": 0,
-            }
-        ).model_dump_json(by_alias=True)
-    )
+    data: List[RegisterModel]

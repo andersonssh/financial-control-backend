@@ -1,6 +1,7 @@
 import os
 from typing import List
 
+from bson.objectid import ObjectId
 from pymongo import MongoClient
 
 mongo_host = os.environ["MONGO_HOST"]
@@ -42,6 +43,17 @@ def update_one(
         .update_one(filters, {operation: changes})
         .modified_count
         == 1
+    )
+
+
+def update_many(
+    collection: str, filters: dict, changes: dict, operation: str = "$set"
+) -> bool:
+    return (
+        db.get_collection(collection)
+        .update_one(filters, {operation: changes})
+        .modified_count
+        >= 1
     )
 
 

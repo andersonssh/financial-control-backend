@@ -1,48 +1,54 @@
+from datetime import datetime
+from typing import Union
+
 from bson.objectid import ObjectId
 from fastapi import APIRouter, HTTPException
-from datetime import datetime
+
 from app import database
-from app.models.registers import (
-    GetRegisters,
-    PatchRegister,
-    PostRegister,
-    RegisterModel,
+from app.models.registers import (GetRegistersModel, RegisterBaseModel,
+                                  RegisterModel)
+
+registers_router = APIRouter(tags=["users"])
+
+
+@registers_router.post(
+    "/registers",
+    status_code=201,
+    response_model_by_alias=True,
+    response_model_exclude_none=True,
 )
-
-registers_router = APIRouter(prefix="/registers", tags=["users"])
-
-
-@registers_router.post("/", status_code=201)
-def post_registers(register: PostRegister) -> RegisterModel:
+def post_registers(register: RegisterBaseModel) -> RegisterModel:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
-    new_register = register.model_dump(exclude_unset=True)
-    new_register["user_id"] = user_id
-    new_register["created_at"] = datetime.now()
+    new_register = RegisterModel(
+        **register.model_dump(by_alias=True), user_id=user_id
+    ).model_dump(by_alias=True)
     inserted_document = database.insert_one("registers", new_register)
     return RegisterModel(**inserted_document)
 
 
-@registers_router.get("/")
-def get_registers() -> GetRegisters:
+@registers_router.get(
+    "/registers", response_model_by_alias=True, response_model_exclude_none=True
+)
+def get_registers() -> GetRegistersModel:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
     registers = database.find("registers", {"user_id": user_id})
-    return GetRegisters(data=registers)
+    return GetRegistersModel(data=registers)
 
 
-@registers_router.patch("/{register_id}", status_code=204)
-def patch_register(register_id: str, register: PatchRegister) -> None:
+@registers_router.put("/registers/{register_id}", status_code=204)
+def put_register(register_id: str, register: RegisterBaseModel) -> None:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
-
+    # todo: implementar logica para impedir mudança de tipo do registro
     if not database.update_one(
         "registers",
         {"_id": ObjectId(register_id), "user_id": user_id},
-        register.model_dump(exclude_unset=True),
+        register.model_dump(by_alias=True),
     ):
         raise HTTPException(status_code=404, detail="Register not found")
     return None
 
 
-@registers_router.delete("/{register_id}", status_code=204)
+@registers_router.delete("/registers/{register_id}", status_code=204)
 def delete_register(register_id: str) -> None:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
 

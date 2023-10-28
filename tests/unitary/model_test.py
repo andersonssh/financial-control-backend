@@ -2,10 +2,12 @@ import json
 import re
 from datetime import datetime
 
+import pytest
 from bson.objectid import ObjectId
+from pydantic_core._pydantic_core import ValidationError
 
 from app.models.base import SystemBaseModel
-from app.models.registers import AmountRegisterModel, PercentageRegisterModel
+from app.models.registers import RegisterBaseModel, RegisterModel
 
 
 class TestBaseModel:
@@ -16,67 +18,113 @@ class TestBaseModel:
         assert isinstance(doc["created_at"], datetime)
         assert isinstance(doc["updated_at"], datetime)
 
-    def test_datetime_fields_as_json(self):
-        doc = json.loads(SystemBaseModel(user_id=ObjectId()).model_dump_json())
+    def test_fields_as_json(self):
+        doc = json.loads(
+            SystemBaseModel(
+                user_id=ObjectId("653ba8b2c9d01c3b755935ca")
+            ).model_dump_json()
+        )
+        assert doc["user_id"] == "653ba8b2c9d01c3b755935ca"
         assert re.search(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$", doc["created_at"])
         assert re.search(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$", doc["updated_at"])
 
 
-class TestAmountRegisterModel:
-    def test_amount_register_model(self):
-        register = AmountRegisterModel(
-            user_id=ObjectId("65309236cc11b109bbe4b0d6"),
+class TestRegisterFullModel:
+    def test_register_full_model(self):
+        register = RegisterModel(
+            user_id=ObjectId("653ba8b2c9d01c3b755935ca"),
             description="description",
             category="category",
-            isPercentage=True,
+            isPercentage=False,
             isRequired=True,
-            percentage=0.5,
             amount=100.0,
-        )
-        register = register.model_dump(by_alias=True)
-        del register["created_at"]
-        del register["updated_at"]
+        ).model_dump(by_alias=True)
+
         del register["_id"]
-        del register["user_id"]
+        del register["updated_at"]
+        del register["created_at"]
+
         assert register == {
-            "description": "description",
-            "category": "category",
-            "isRequired": True,
             "amount": 100.0,
+            "category": "category",
+            "description": "description",
+            "isPercentage": False,
+            "isRequired": True,
+            "percentage": None,
+            "percentageOn": None,
+            "user_id": ObjectId("653ba8b2c9d01c3b755935ca"),
         }
 
+
+class TestAmountRegisterModel:
+    def test_amount_register_model(self):
+        register = RegisterBaseModel(
+            description="description",
+            category="category",
+            isPercentage=False,
+            isRequired=True,
+            amount=100.0,
+            percentage=0.5,
+            percentageOn=[{"_id": ObjectId(), "category": "categ", "amount": 100}],
+        ).model_dump(by_alias=True)
+        assert register == {
+            "description": "description",
+            "category": "category",
+            "isPercentage": False,
+            "isRequired": True,
+            "amount": 100.0,
+            "percentage": None,
+            "percentageOn": None,
+        }
+
+    def test_amount_register_without_amount_field(self):
+        with pytest.raises(ValidationError):
+            RegisterBaseModel(
+                description="description",
+                category="category",
+                isPercentage=False,
+                isRequired=True,
+            )
+
+
+class TestPercentageRegisterModel:
     def test_percentage_register_model(self):
-        register = PercentageRegisterModel(
-            user_id=ObjectId("65309236cc11b109bbe4b0d6"),
+        register = RegisterBaseModel(
             description="description",
             category="category",
             isPercentage=True,
             isRequired=True,
+            amount=100.0,
+            percentage=0.5,
             percentageOn=[
                 {
-                    "_id": ObjectId("65309236cc11b109bbe4b0d6"),
-                    "category": "embedded document category",
-                    "amount": 10,
+                    "_id": ObjectId("653ba8b2c9d01c3b755935ca"),
+                    "category": "categ",
+                    "amount": 100,
                 }
             ],
-            percentage=0.5,
-            amount=100.0,
-        )
-        register = register.model_dump(by_alias=True)
-        del register["created_at"]
-        del register["updated_at"]
-        del register["_id"]
-        del register["user_id"]
+        ).model_dump(by_alias=True)
         assert register == {
             "description": "description",
             "category": "category",
+            "isPercentage": True,
             "isRequired": True,
             "percentage": 0.5,
             "percentageOn": [
                 {
-                    "_id": ObjectId("65309236cc11b109bbe4b0d6"),
-                    "category": "embedded document category",
-                    "amount": 10.0,
+                    "_id": ObjectId("653ba8b2c9d01c3b755935ca"),
+                    "category": "categ",
+                    "amount": 100.0,
                 }
-            ]
+            ],
+            "amount": None,
         }
+
+    def test_percentage_register_without_amount_field(self):
+        with pytest.raises(ValidationError):
+            RegisterBaseModel(
+                description="description",
+                category="category",
+                isPercentage=True,
+                isRequired=True,
+            )
