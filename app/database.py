@@ -1,8 +1,8 @@
 import os
 from typing import List
 
-from bson.objectid import ObjectId
 from pymongo import MongoClient
+from pymongo.results import UpdateResult
 
 mongo_host = os.environ["MONGO_HOST"]
 mongo_database = os.environ["MONGO_DATABASE"]
@@ -37,13 +37,8 @@ def insert_one(collection: str, document: dict) -> dict | None:
 
 def update_one(
     collection: str, filters: dict, changes: dict, operation: str = "$set"
-) -> bool:
-    return (
-        db.get_collection(collection)
-        .update_one(filters, {operation: changes})
-        .modified_count
-        == 1
-    )
+) -> UpdateResult:
+    return db.get_collection(collection).update_one(filters, {operation: changes})
 
 
 def update_many(

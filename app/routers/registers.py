@@ -1,10 +1,9 @@
-
 from bson.objectid import ObjectId
 from fastapi import APIRouter, HTTPException
 
 from app import database
-from app.models.registers import (GetRegistersModel, RegisterBaseModel,
-                                  RegisterModel)
+from app.models.registers import (GetRegistersModel, PatchRegisterModel,
+                                  RegisterBaseModel, RegisterModel)
 
 registers_router = APIRouter(tags=["users"])
 
@@ -33,15 +32,28 @@ def get_registers() -> GetRegistersModel:
     return GetRegistersModel(data=registers)
 
 
-@registers_router.put("/registers/{register_id}", status_code=204)
-def put_register(register_id: str, register: RegisterBaseModel) -> None:
+# @registers_router.put("/registers/{register_id}", status_code=204)
+# def put_register(register_id: str, register: RegisterBaseModel) -> None:
+#     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
+#     # todo: implementar logica para impedir mudança de tipo do registro
+#     if not database.update_one(
+#         "registers",
+#         {"_id": ObjectId(register_id), "user_id": user_id},
+#         register.model_dump(by_alias=True),
+#     ):
+#         raise HTTPException(status_code=404, detail="Register not found")
+#     return None
+
+
+@registers_router.patch("/registers/{register_id}", status_code=204)
+def patch_register(register_id: str, register: PatchRegisterModel) -> None:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
-    # todo: implementar logica para impedir mudança de tipo do registro
-    if not database.update_one(
+    update_result = database.update_one(
         "registers",
         {"_id": ObjectId(register_id), "user_id": user_id},
-        register.model_dump(by_alias=True),
-    ):
+        register.model_dump(by_alias=True, exclude_unset=True),
+    )
+    if update_result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Register not found")
     return None
 

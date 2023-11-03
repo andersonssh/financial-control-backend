@@ -28,6 +28,7 @@ class TestGetRegisters:
                     "description": "streaming",
                     "isPercentage": False,
                     "isRequired": True,
+                    "isPaid": False,
                     "updated_at": "2001-01-01 00:00:00",
                     "user_id": "6526b0e5b30dbe90dcd63192",
                 },
@@ -38,6 +39,7 @@ class TestGetRegisters:
                     "description": "streaming",
                     "isPercentage": True,
                     "isRequired": True,
+                    "isPaid": False,
                     "percentage": 0.0,
                     "percentageOn": [
                         {
@@ -71,6 +73,7 @@ class TestPostRegister:
         "description": "string",
         "isPercentage": False,
         "isRequired": False,
+        "isPaid": False,
         "amount": 0,
     }
     percentage_register_payload = {
@@ -78,6 +81,7 @@ class TestPostRegister:
         "description": "string",
         "isPercentage": True,
         "isRequired": False,
+        "isPaid": False,
         "percentage": 1,
         "percentageOn": [
             {
@@ -143,6 +147,32 @@ class TestPostRegister:
 #         assert response.status_code == 404
 #         db_register = database.find_one("registers", {"_id": register["_id"]})
 #         assert db_register["category"] != "new category"
+class TestPatchRegister:
+    def test_patch_register(self, client, current_user, amount_register):
+        amount_register["description"] = "old description"
+        amount_register["category"] = "old category"
+        amount_register["isPaid"] = False
+        database.insert_one("registers", amount_register)
+        response = client.patch(
+            f"/registers/{str(amount_register['_id'])}",
+            json={"category": "new category", "isPaid": True},
+        )
+        assert response.status_code == 204
+        db_register = database.find_one("registers", {"_id": amount_register["_id"]})
+        assert db_register["description"] == "old description"
+        assert db_register["category"] == "new category"
+        assert db_register["isPaid"]
+
+    def test_patch_other_user_register(self, client, current_user, amount_register):
+        amount_register["user_id"] = ObjectId()
+        database.insert_one("registers", amount_register)
+        response = client.patch(
+            f"/registers/{str(amount_register['_id'])}",
+            json={"category": "new category"},
+        )
+        assert response.status_code == 404
+        db_register = database.find_one("registers", {"_id": amount_register["_id"]})
+        assert db_register["category"] != "new category"
 
 
 class TestDeleteRegister:

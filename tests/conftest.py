@@ -41,6 +41,7 @@ def amount_register():
         "category": "entertainment",
         "isPercentage": False,
         "isRequired": True,
+        "isPaid": False,
         "amount": 100,
     }
 
@@ -56,6 +57,7 @@ def percentage_register():
         "category": "entertainment",
         "isPercentage": True,
         "isRequired": True,
+        "isPaid": False,
         "percentage": 0,
         "percentageOn": [
             {

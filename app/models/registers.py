@@ -24,6 +24,7 @@ class RegisterBaseModel(BaseModel):
     amount: float | None = None
     percentageOn: List[AmountRegisterEmbeddedModel] | None = None
     percentage: confloat(ge=0, le=1) | None = None
+    isPaid: bool = None
 
     @model_validator(mode="before")
     @classmethod
@@ -48,3 +49,9 @@ class RegisterModel(RegisterBaseModel, SystemBaseModel):
 
 class GetRegistersModel(BaseModel):
     data: List[RegisterModel]
+
+
+class PatchRegisterModel(BaseModel):
+    description: str = None
+    category: str = None
+    isPaid: bool = None

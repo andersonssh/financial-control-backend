@@ -37,6 +37,7 @@ class TestRegisterFullModel:
             category="category",
             isPercentage=False,
             isRequired=True,
+            isPaid=False,
             amount=100.0,
         ).model_dump(by_alias=True)
 
@@ -50,6 +51,7 @@ class TestRegisterFullModel:
             "description": "description",
             "isPercentage": False,
             "isRequired": True,
+            "isPaid": False,
             "percentage": None,
             "percentageOn": None,
             "user_id": ObjectId("653ba8b2c9d01c3b755935ca"),
@@ -63,6 +65,7 @@ class TestAmountRegisterModel:
             category="category",
             isPercentage=False,
             isRequired=True,
+            isPaid=False,
             amount=100.0,
             percentage=0.5,
             percentageOn=[{"_id": ObjectId(), "category": "categ", "amount": 100}],
@@ -72,6 +75,7 @@ class TestAmountRegisterModel:
             "category": "category",
             "isPercentage": False,
             "isRequired": True,
+            "isPaid": False,
             "amount": 100.0,
             "percentage": None,
             "percentageOn": None,
@@ -94,6 +98,7 @@ class TestPercentageRegisterModel:
             category="category",
             isPercentage=True,
             isRequired=True,
+            isPaid=False,
             amount=100.0,
             percentage=0.5,
             percentageOn=[
@@ -109,6 +114,7 @@ class TestPercentageRegisterModel:
             "category": "category",
             "isPercentage": True,
             "isRequired": True,
+            "isPaid": False,
             "percentage": 0.5,
             "percentageOn": [
                 {
