@@ -6,14 +6,14 @@ from bson.objectid import ObjectId
 
 from app import database
 
-# TODO: faqzer teste que muda tipo de amount para percentage documento ja salvo no banco
+# TODO: faqzer teste que muda tipo de value para percentage documento ja salvo no banco
 
 
 class TestGetRegisters:
     def test_get_registers(
-        self, client, current_user, amount_register, percentage_register
+        self, client, current_user, register, percentage_register
     ):
-        database.insert_one("registers", amount_register)
+        database.insert_one("registers", register)
         database.insert_one("registers", percentage_register)
 
         response = client.get("/registers")
@@ -22,7 +22,7 @@ class TestGetRegisters:
             "data": [
                 {
                     "_id": "653587ab79609ae20beb9559",
-                    "amount": 100.0,
+                    "value": 100.0,
                     "category": "entertainment",
                     "created_at": "2001-01-01 00:00:00",
                     "description": "streaming",
@@ -44,7 +44,7 @@ class TestGetRegisters:
                     "percentageOn": [
                         {
                             "_id": "653ba8b2c9d01c3b755935ca",
-                            "amount": 100.0,
+                            "value": 100.0,
                             "category": "category",
                         }
                     ],
@@ -54,11 +54,11 @@ class TestGetRegisters:
             ]
         }
 
-    def test_get_only_user_registers(self, client, current_user, amount_register):
-        database.insert_one("registers", amount_register)
-        amount_register["_id"] = ObjectId()
-        amount_register["user_id"] = ObjectId()
-        database.insert_one("registers", amount_register)
+    def test_get_only_user_registers(self, client, current_user, register):
+        database.insert_one("registers", register)
+        register["_id"] = ObjectId()
+        register["user_id"] = ObjectId()
+        database.insert_one("registers", register)
         response = client.get("/registers")
         assert response.status_code == 200
 
@@ -68,13 +68,13 @@ class TestGetRegisters:
 
 
 class TestPostRegister:
-    amount_register_payload = {
+    register_payload = {
         "category": "string",
         "description": "string",
         "isPercentage": False,
         "isRequired": False,
         "isPaid": False,
-        "amount": 0,
+        "value": 0,
     }
     percentage_register_payload = {
         "category": "string",
@@ -87,17 +87,17 @@ class TestPostRegister:
             {
                 "_id": ObjectId("653ba8b2c9d01c3b755935ca"),
                 "category": "categ",
-                "amount": 100,
+                "value": 100,
             }
         ],
     }
 
     def test_post_register(self, client, current_user):
-        response = client.post("/registers", json=self.amount_register_payload)
+        response = client.post("/registers", json=self.register_payload)
         assert response.status_code == 201
 
         returned_register = response.json()
-        expected_register = copy.deepcopy(self.amount_register_payload)
+        expected_register = copy.deepcopy(self.register_payload)
         expected_register["_id"] = returned_register["_id"]
         expected_register["created_at"] = returned_register["created_at"]
         expected_register["updated_at"] = returned_register["updated_at"]
@@ -105,7 +105,7 @@ class TestPostRegister:
         assert returned_register == expected_register
 
     def test_saved_db_register(self, client, current_user):
-        response = client.post("/registers", json=self.amount_register_payload)
+        response = client.post("/registers", json=self.register_payload)
         assert response.status_code == 201
         db_register = database.find_one(
             "registers", {"_id": ObjectId(response.json()["_id"])}
@@ -116,7 +116,7 @@ class TestPostRegister:
         assert isinstance(db_register["updated_at"], datetime)
         assert isinstance(db_register["isPercentage"], bool)
         assert isinstance(db_register["isRequired"], bool)
-        assert isinstance(db_register["amount"], float)
+        assert isinstance(db_register["value"], float)
         assert isinstance(db_register["description"], str)
         assert isinstance(db_register["category"], str)
         assert db_register["percentage"] is None
@@ -124,16 +124,16 @@ class TestPostRegister:
 
 
 # class TestPutRegister:
-#     def test_put_register(self, client, current_user, amount_register):
-#         amount_register.pop("percentageOn", None)
-#         amount_register["description"] = "old description"
-#         database.insert_one("registers", amount_register)
+#     def test_put_register(self, client, current_user, register):
+#         register.pop("percentageOn", None)
+#         register["description"] = "old description"
+#         database.insert_one("registers", register)
 #         response = client.patch(
-#             f"/registers/{str(amount_register['_id'])}",
+#             f"/registers/{str(register['_id'])}",
 #             json={"category": "new category", "percentageOn": [str(ObjectId())]},
 #         )
 #         assert response.status_code == 204
-#         db_register = database.find_one("registers", {"_id": amount_register["_id"]})
+#         db_register = database.find_one("registers", {"_id": register["_id"]})
 #         assert db_register["category"] == "new category"
 #         assert db_register["description"] == "old description"
 #         assert isinstance(db_register["percentageOn"][0], ObjectId)
@@ -148,43 +148,43 @@ class TestPostRegister:
 #         db_register = database.find_one("registers", {"_id": register["_id"]})
 #         assert db_register["category"] != "new category"
 class TestPatchRegister:
-    def test_patch_register(self, client, current_user, amount_register):
-        amount_register["description"] = "old description"
-        amount_register["category"] = "old category"
-        amount_register["isPaid"] = False
-        database.insert_one("registers", amount_register)
+    def test_patch_register(self, client, current_user, register):
+        register["description"] = "old description"
+        register["category"] = "old category"
+        register["isPaid"] = False
+        database.insert_one("registers", register)
         response = client.patch(
-            f"/registers/{str(amount_register['_id'])}",
+            f"/registers/{str(register['_id'])}",
             json={"category": "new category", "isPaid": True},
         )
         assert response.status_code == 204
-        db_register = database.find_one("registers", {"_id": amount_register["_id"]})
+        db_register = database.find_one("registers", {"_id": register["_id"]})
         assert db_register["description"] == "old description"
         assert db_register["category"] == "new category"
         assert db_register["isPaid"]
 
-    def test_patch_other_user_register(self, client, current_user, amount_register):
-        amount_register["user_id"] = ObjectId()
-        database.insert_one("registers", amount_register)
+    def test_patch_other_user_register(self, client, current_user, register):
+        register["user_id"] = ObjectId()
+        database.insert_one("registers", register)
         response = client.patch(
-            f"/registers/{str(amount_register['_id'])}",
+            f"/registers/{str(register['_id'])}",
             json={"category": "new category"},
         )
         assert response.status_code == 404
-        db_register = database.find_one("registers", {"_id": amount_register["_id"]})
+        db_register = database.find_one("registers", {"_id": register["_id"]})
         assert db_register["category"] != "new category"
 
 
 class TestDeleteRegister:
-    def test_delete_register(self, client, current_user, amount_register):
-        database.insert_one("registers", amount_register)
-        response = client.delete(f"/registers/{str(amount_register['_id'])}")
+    def test_delete_register(self, client, current_user, register):
+        database.insert_one("registers", register)
+        response = client.delete(f"/registers/{str(register['_id'])}")
         assert response.status_code == 204
-        assert not database.find_one("registers", {"_id": amount_register["_id"]})
+        assert not database.find_one("registers", {"_id": register["_id"]})
 
-    def test_delete_other_user_register(self, client, current_user, amount_register):
-        amount_register["user_id"] = ObjectId()
-        database.insert_one("registers", amount_register)
-        response = client.delete(f"/registers/{str(amount_register['_id'])}")
+    def test_delete_other_user_register(self, client, current_user, register):
+        register["user_id"] = ObjectId()
+        database.insert_one("registers", register)
+        response = client.delete(f"/registers/{str(register['_id'])}")
         assert response.status_code == 404
-        assert database.find_one("registers", {"_id": amount_register["_id"]})
+        assert database.find_one("registers", {"_id": register["_id"]})

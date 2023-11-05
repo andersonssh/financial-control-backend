@@ -38,7 +38,7 @@ class TestRegisterFullModel:
             isPercentage=False,
             isRequired=True,
             isPaid=False,
-            amount=100.0,
+            value=100.0,
         ).model_dump(by_alias=True)
 
         del register["_id"]
@@ -46,7 +46,7 @@ class TestRegisterFullModel:
         del register["created_at"]
 
         assert register == {
-            "amount": 100.0,
+            "value": 100.0,
             "category": "category",
             "description": "description",
             "isPercentage": False,
@@ -58,17 +58,17 @@ class TestRegisterFullModel:
         }
 
 
-class TestAmountRegisterModel:
-    def test_amount_register_model(self):
+class TestRegisterModel:
+    def test_register_model(self):
         register = RegisterBaseModel(
             description="description",
             category="category",
             isPercentage=False,
             isRequired=True,
             isPaid=False,
-            amount=100.0,
+            value=100.0,
             percentage=0.5,
-            percentageOn=[{"_id": ObjectId(), "category": "categ", "amount": 100}],
+            percentageOn=[{"_id": ObjectId(), "category": "categ", "value": 100}],
         ).model_dump(by_alias=True)
         assert register == {
             "description": "description",
@@ -76,12 +76,12 @@ class TestAmountRegisterModel:
             "isPercentage": False,
             "isRequired": True,
             "isPaid": False,
-            "amount": 100.0,
+            "value": 100.0,
             "percentage": None,
             "percentageOn": None,
         }
 
-    def test_amount_register_without_amount_field(self):
+    def test_register_without_value_field(self):
         with pytest.raises(ValidationError):
             RegisterBaseModel(
                 description="description",
@@ -99,13 +99,13 @@ class TestPercentageRegisterModel:
             isPercentage=True,
             isRequired=True,
             isPaid=False,
-            amount=100.0,
+            value=100.0,
             percentage=0.5,
             percentageOn=[
                 {
                     "_id": ObjectId("653ba8b2c9d01c3b755935ca"),
                     "category": "categ",
-                    "amount": 100,
+                    "value": 100,
                 }
             ],
         ).model_dump(by_alias=True)
@@ -120,13 +120,13 @@ class TestPercentageRegisterModel:
                 {
                     "_id": ObjectId("653ba8b2c9d01c3b755935ca"),
                     "category": "categ",
-                    "amount": 100.0,
+                    "value": 100.0,
                 }
             ],
-            "amount": None,
+            "value": None,
         }
 
-    def test_percentage_register_without_amount_field(self):
+    def test_percentage_register_without_value_field(self):
         with pytest.raises(ValidationError):
             RegisterBaseModel(
                 description="description",

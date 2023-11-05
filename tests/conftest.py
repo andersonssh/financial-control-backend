@@ -31,7 +31,7 @@ def current_user():
 
 
 @pytest.fixture()
-def amount_register():
+def register():
     return {
         "_id": ObjectId("653587ab79609ae20beb9559"),
         "user_id": ObjectId("6526b0e5b30dbe90dcd63192"),
@@ -42,7 +42,7 @@ def amount_register():
         "isPercentage": False,
         "isRequired": True,
         "isPaid": False,
-        "amount": 100,
+        "value": 100,
     }
 
 
@@ -63,7 +63,7 @@ def percentage_register():
             {
                 "_id": ObjectId("653ba8b2c9d01c3b755935ca"),
                 "category": "category",
-                "amount": 100,
+                "value": 100,
             }
         ],
     }
