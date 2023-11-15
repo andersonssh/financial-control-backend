@@ -54,8 +54,3 @@ class SystemBaseModel(BaseModel):
     updated_at: datetime = Field(
         default_factory=datetime.now, examples=["2000-01-01 00:00:00"]
     )
-    user_id: Annotated[
-        ObjectId,
-        ObjectIdAnnotation,
-        Field(examples=["6526b0e5b30dbe90dcd63192"]),
-    ]

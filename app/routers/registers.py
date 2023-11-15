@@ -1,14 +1,14 @@
 from bson.objectid import ObjectId
 from fastapi import APIRouter, HTTPException
 
-from app import database
+from app.core import database
 from app.models.registers import (GetRegistersModel, PatchRegisterModel,
                                   RegisterBaseModel, RegisterModel)
 
-registers_router = APIRouter(tags=["users"])
+router = APIRouter(tags=["users"])
 
 
-@registers_router.post(
+@router.post(
     "/registers",
     status_code=201,
     response_model_by_alias=True,
@@ -23,7 +23,7 @@ def post_registers(register: RegisterBaseModel) -> RegisterModel:
     return RegisterModel(**inserted_document)
 
 
-@registers_router.get(
+@router.get(
     "/registers", response_model_by_alias=True, response_model_exclude_none=True
 )
 def get_registers() -> GetRegistersModel:
@@ -32,20 +32,21 @@ def get_registers() -> GetRegistersModel:
     return GetRegistersModel(data=registers)
 
 
-# @registers_router.put("/registers/{register_id}", status_code=204)
-# def put_register(register_id: str, register: RegisterBaseModel) -> None:
-#     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
-#     # todo: implementar logica para impedir mudança de tipo do registro
-#     if not database.update_one(
-#         "registers",
-#         {"_id": ObjectId(register_id), "user_id": user_id},
-#         register.model_dump(by_alias=True),
-#     ):
-#         raise HTTPException(status_code=404, detail="Register not found")
-#     return None
+@router.put("/registers/{register_id}", status_code=204)
+def put_register(register_id: str, register: RegisterBaseModel) -> None:
+    user_id = ObjectId("6526b0e5b30dbe90dcd63192")
+    # todo: implementar logica para impedir mudança de tipo do registro
+    update_result = database.update_one(
+        "registers",
+        {"_id": ObjectId(register_id), "user_id": user_id},
+        register.model_dump(by_alias=True, exclude_unset=True),
+    )
+    if update_result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Register not found")
+    return None
 
 
-@registers_router.patch("/registers/{register_id}", status_code=204)
+@router.patch("/registers/{register_id}", status_code=204)
 def patch_register(register_id: str, register: PatchRegisterModel) -> None:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
     update_result = database.update_one(
@@ -58,7 +59,7 @@ def patch_register(register_id: str, register: PatchRegisterModel) -> None:
     return None
 
 
-@registers_router.delete("/registers/{register_id}", status_code=204)
+@router.delete("/registers/{register_id}", status_code=204)
 def delete_register(register_id: str) -> None:
     user_id = ObjectId("6526b0e5b30dbe90dcd63192")
 

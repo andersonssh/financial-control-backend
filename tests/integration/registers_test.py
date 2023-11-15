@@ -1,18 +1,15 @@
 import copy
-import re
 from datetime import datetime
 
 from bson.objectid import ObjectId
 
-from app import database
+from app.core import database
 
 # TODO: faqzer teste que muda tipo de value para percentage documento ja salvo no banco
 
 
 class TestGetRegisters:
-    def test_get_registers(
-        self, client, current_user, register, percentage_register
-    ):
+    def test_get_registers(self, client, current_user, register, percentage_register):
         database.insert_one("registers", register)
         database.insert_one("registers", percentage_register)
 

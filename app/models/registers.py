@@ -44,7 +44,11 @@ class RegisterBaseModel(BaseModel):
 
 
 class RegisterModel(RegisterBaseModel, SystemBaseModel):
-    pass
+    user_id: Annotated[
+        ObjectId,
+        ObjectIdAnnotation,
+        Field(examples=["6526b0e5b30dbe90dcd63192"]),
+    ]
 
 
 class GetRegistersModel(BaseModel):

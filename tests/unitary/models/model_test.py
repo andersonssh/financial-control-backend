@@ -6,25 +6,21 @@ import pytest
 from bson.objectid import ObjectId
 from pydantic_core._pydantic_core import ValidationError
 
+from app.models.auth_model import GoogleLoginModel
 from app.models.base import SystemBaseModel
 from app.models.registers import RegisterBaseModel, RegisterModel
+from app.models.users import Users
 
 
 class TestBaseModel:
     def test_system_base_model(self):
-        doc = SystemBaseModel(user_id=str(ObjectId())).model_dump(by_alias=True)
+        doc = SystemBaseModel().model_dump(by_alias=True)
         assert isinstance(doc["_id"], ObjectId)
-        assert isinstance(doc["user_id"], ObjectId)
         assert isinstance(doc["created_at"], datetime)
         assert isinstance(doc["updated_at"], datetime)
 
     def test_fields_as_json(self):
-        doc = json.loads(
-            SystemBaseModel(
-                user_id=ObjectId("653ba8b2c9d01c3b755935ca")
-            ).model_dump_json()
-        )
-        assert doc["user_id"] == "653ba8b2c9d01c3b755935ca"
+        doc = json.loads(SystemBaseModel().model_dump_json())
         assert re.search(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$", doc["created_at"])
         assert re.search(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$", doc["updated_at"])
 
@@ -134,3 +130,31 @@ class TestPercentageRegisterModel:
                 isPercentage=True,
                 isRequired=True,
             )
+
+
+class TestGoogleLoginModel:
+    def test_google_login_model(self):
+        google_login = GoogleLoginModel(
+            credential="credential",
+        ).model_dump()
+        assert google_login == {"credential": "credential"}
+
+
+class TestUserModel:
+    def test_user_model(self):
+        user = Users(
+            name="name  ",
+            email="email@email.com",
+            password="password",
+        ).model_dump(by_alias=True)
+
+        created_at = user.pop("created_at")
+        updated_at = user.pop("updated_at")
+        assert isinstance(created_at, datetime)
+        assert isinstance(updated_at, datetime)
+        assert user == {
+            "_id": user["_id"],
+            "name": "name",
+            "email": "email@email.com",
+            "password": "password",
+        }
