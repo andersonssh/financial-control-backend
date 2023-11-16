@@ -37,6 +37,9 @@ class TestGoogleLogin:
         assert response.status_code == 200
         assert "token" in response.json()
         token = response.json()["token"]
+        user = response.json()["user"]
+        assert user["name"] == "User Name"
+        assert user["email"] == "user@email.com"
         decoded_token = jwt.decode(token, os.environ["SECRET_KEY"])
         assert "email" in decoded_token
         assert decoded_token["email"] == "user@email.com"

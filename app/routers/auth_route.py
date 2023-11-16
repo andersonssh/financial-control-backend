@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter
 from fastapi.security import OAuth2PasswordBearer
 
@@ -12,6 +14,7 @@ router = APIRouter(tags=["auth"])
 
 @router.post("/google_login")
 def google_login(data: dict):
+    # todo: melhorar fluxo dessa funcao
     current_user = get_current_user(data["credential"], True)
     if not current_user:
         payload = auth.decode_token(data["credential"], True)
@@ -19,4 +22,7 @@ def google_login(data: dict):
             name=payload.get("name"), email=payload.get("email"), password=None
         )
 
-    return {"token": auth.create_user_access_token(current_user.email)}
+    return {
+        "token": auth.create_user_access_token(current_user.email),
+        "user": json.loads(current_user.model_dump_json(by_alias=True))
+    }
