@@ -9,11 +9,11 @@ from app.core import database
 
 
 class TestGetRegisters:
-    def test_get_registers(self, client, current_user, register, percentage_register):
+    def test_get_registers(self, client, current_user, register, percentage_register, auth_headers):
         database.insert_one("registers", register)
         database.insert_one("registers", percentage_register)
 
-        response = client.get("/registers")
+        response = client.get("/registers", headers=auth_headers)
         assert response.status_code == 200
         assert response.json() == {
             "data": [
@@ -51,12 +51,12 @@ class TestGetRegisters:
             ]
         }
 
-    def test_get_only_user_registers(self, client, current_user, register):
+    def test_get_only_user_registers(self, client, current_user, register, auth_headers):
         database.insert_one("registers", register)
         register["_id"] = ObjectId()
         register["user_id"] = ObjectId()
         database.insert_one("registers", register)
-        response = client.get("/registers")
+        response = client.get("/registers", headers=auth_headers)
         assert response.status_code == 200
 
         returned_registers = response.json()["data"]
@@ -89,8 +89,8 @@ class TestPostRegister:
         ],
     }
 
-    def test_post_register(self, client, current_user):
-        response = client.post("/registers", json=self.register_payload)
+    def test_post_register(self, client, current_user, auth_headers):
+        response = client.post("/registers", headers=auth_headers,json=self.register_payload)
         assert response.status_code == 201
 
         returned_register = response.json()
@@ -101,8 +101,8 @@ class TestPostRegister:
         expected_register["user_id"] = str(current_user["_id"])
         assert returned_register == expected_register
 
-    def test_saved_db_register(self, client, current_user):
-        response = client.post("/registers", json=self.register_payload)
+    def test_saved_db_register(self, client, current_user, auth_headers):
+        response = client.post("/registers", headers=auth_headers, json=self.register_payload)
         assert response.status_code == 201
         db_register = database.find_one(
             "registers", {"_id": ObjectId(response.json()["_id"])}
@@ -145,13 +145,14 @@ class TestPostRegister:
 #         db_register = database.find_one("registers", {"_id": register["_id"]})
 #         assert db_register["category"] != "new category"
 class TestPatchRegister:
-    def test_patch_register(self, client, current_user, register):
+    def test_patch_register(self, client, current_user, register, auth_headers):
         register["description"] = "old description"
         register["category"] = "old category"
         register["isPaid"] = False
         database.insert_one("registers", register)
         response = client.patch(
             f"/registers/{str(register['_id'])}",
+            headers=auth_headers,
             json={"category": "new category", "isPaid": True},
         )
         assert response.status_code == 204
@@ -160,11 +161,11 @@ class TestPatchRegister:
         assert db_register["category"] == "new category"
         assert db_register["isPaid"]
 
-    def test_patch_other_user_register(self, client, current_user, register):
+    def test_patch_other_user_register(self, client, current_user, register, auth_headers):
         register["user_id"] = ObjectId()
         database.insert_one("registers", register)
         response = client.patch(
-            f"/registers/{str(register['_id'])}",
+            f"/registers/{str(register['_id'])}", headers=auth_headers,
             json={"category": "new category"},
         )
         assert response.status_code == 404
@@ -173,15 +174,15 @@ class TestPatchRegister:
 
 
 class TestDeleteRegister:
-    def test_delete_register(self, client, current_user, register):
+    def test_delete_register(self, client, current_user, register, auth_headers):
         database.insert_one("registers", register)
-        response = client.delete(f"/registers/{str(register['_id'])}")
+        response = client.delete(f"/registers/{str(register['_id'])}", headers=auth_headers)
         assert response.status_code == 204
         assert not database.find_one("registers", {"_id": register["_id"]})
 
-    def test_delete_other_user_register(self, client, current_user, register):
+    def test_delete_other_user_register(self, client, current_user, register, auth_headers):
         register["user_id"] = ObjectId()
         database.insert_one("registers", register)
-        response = client.delete(f"/registers/{str(register['_id'])}")
+        response = client.delete(f"/registers/{str(register['_id'])}", headers=auth_headers)
         assert response.status_code == 404
         assert database.find_one("registers", {"_id": register["_id"]})

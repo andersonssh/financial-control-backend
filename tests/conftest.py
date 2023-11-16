@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from unittest.mock import patch
+from jose import jwt
 
 import mongomock
 import pytest
@@ -16,15 +17,6 @@ def patch_db():
     mock_db = mongomock.MongoClient().db
     with patch("app.core.database.db", mock_db):
         yield mock_db
-
-
-@pytest.fixture()
-def current_user():
-    return {
-        "_id": ObjectId("6526b0e5b30dbe90dcd63192"),
-        "name": "Current User",
-        "email": "currentuser@email.com.br",
-    }
 
 
 @pytest.fixture()
