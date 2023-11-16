@@ -1,16 +1,18 @@
-from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from jose.exceptions import JWTError
 
 from app.core import auth, database
 from app.models.users import Users as User
 
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], google_token: bool = False) -> User | None:
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)], google_token: bool = False
+) -> User | None:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

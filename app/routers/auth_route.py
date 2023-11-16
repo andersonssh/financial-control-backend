@@ -24,5 +24,5 @@ def google_login(data: dict):
 
     return {
         "token": auth.create_user_access_token(current_user.email),
-        "user": json.loads(current_user.model_dump_json(by_alias=True))
+        "user": json.loads(current_user.model_dump_json(by_alias=True)),
     }

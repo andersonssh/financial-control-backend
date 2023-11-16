@@ -9,7 +9,9 @@ from app.core import database
 
 
 class TestGetRegisters:
-    def test_get_registers(self, client, current_user, register, percentage_register, auth_headers):
+    def test_get_registers(
+        self, client, current_user, register, percentage_register, auth_headers
+    ):
         database.insert_one("registers", register)
         database.insert_one("registers", percentage_register)
 
@@ -51,7 +53,9 @@ class TestGetRegisters:
             ]
         }
 
-    def test_get_only_user_registers(self, client, current_user, register, auth_headers):
+    def test_get_only_user_registers(
+        self, client, current_user, register, auth_headers
+    ):
         database.insert_one("registers", register)
         register["_id"] = ObjectId()
         register["user_id"] = ObjectId()
@@ -90,7 +94,9 @@ class TestPostRegister:
     }
 
     def test_post_register(self, client, current_user, auth_headers):
-        response = client.post("/registers", headers=auth_headers,json=self.register_payload)
+        response = client.post(
+            "/registers", headers=auth_headers, json=self.register_payload
+        )
         assert response.status_code == 201
 
         returned_register = response.json()
@@ -102,7 +108,9 @@ class TestPostRegister:
         assert returned_register == expected_register
 
     def test_saved_db_register(self, client, current_user, auth_headers):
-        response = client.post("/registers", headers=auth_headers, json=self.register_payload)
+        response = client.post(
+            "/registers", headers=auth_headers, json=self.register_payload
+        )
         assert response.status_code == 201
         db_register = database.find_one(
             "registers", {"_id": ObjectId(response.json()["_id"])}
@@ -161,11 +169,14 @@ class TestPatchRegister:
         assert db_register["category"] == "new category"
         assert db_register["isPaid"]
 
-    def test_patch_other_user_register(self, client, current_user, register, auth_headers):
+    def test_patch_other_user_register(
+        self, client, current_user, register, auth_headers
+    ):
         register["user_id"] = ObjectId()
         database.insert_one("registers", register)
         response = client.patch(
-            f"/registers/{str(register['_id'])}", headers=auth_headers,
+            f"/registers/{str(register['_id'])}",
+            headers=auth_headers,
             json={"category": "new category"},
         )
         assert response.status_code == 404
@@ -176,13 +187,19 @@ class TestPatchRegister:
 class TestDeleteRegister:
     def test_delete_register(self, client, current_user, register, auth_headers):
         database.insert_one("registers", register)
-        response = client.delete(f"/registers/{str(register['_id'])}", headers=auth_headers)
+        response = client.delete(
+            f"/registers/{str(register['_id'])}", headers=auth_headers
+        )
         assert response.status_code == 204
         assert not database.find_one("registers", {"_id": register["_id"]})
 
-    def test_delete_other_user_register(self, client, current_user, register, auth_headers):
+    def test_delete_other_user_register(
+        self, client, current_user, register, auth_headers
+    ):
         register["user_id"] = ObjectId()
         database.insert_one("registers", register)
-        response = client.delete(f"/registers/{str(register['_id'])}", headers=auth_headers)
+        response = client.delete(
+            f"/registers/{str(register['_id'])}", headers=auth_headers
+        )
         assert response.status_code == 404
         assert database.find_one("registers", {"_id": register["_id"]})

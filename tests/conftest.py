@@ -1,11 +1,11 @@
 import os
 from datetime import datetime
 from unittest.mock import patch
-from jose import jwt
 
 import mongomock
 import pytest
 from bson.objectid import ObjectId
+from jose import jwt
 
 os.environ["SECRET_KEY"] = "secret_key"
 os.environ["GOOGLE_PUBLIC_KEY"] = "google_public_key"
