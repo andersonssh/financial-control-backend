@@ -146,6 +146,7 @@ class TestUserModel:
             name="name  ",
             email="email@email.com",
             password="password",
+            google_sub="xxx",
         ).model_dump(by_alias=True)
 
         created_at = user.pop("created_at")
@@ -157,4 +158,5 @@ class TestUserModel:
             "name": "name",
             "email": "email@email.com",
             "password": "password",
+            "google_sub": "xxx",
         }

@@ -25,14 +25,6 @@ class TestToken:
         assert "email" in decoded_token
         assert decoded_token["email"] == decoded_token["email"]
 
-    def test_decode_google_token(self):
-        token = jwt.encode(
-            {"email": "example@email.com"}, os.environ["GOOGLE_PUBLIC_KEY"]
-        )
-        decoded_token = auth.decode_token(token, True)
-        assert "email" in decoded_token
-        assert decoded_token["email"] == decoded_token["email"]
-
 
 class TestPassword:
     def test_get_password_hash(self):

@@ -1,10 +1,10 @@
 import os
 from datetime import datetime, timedelta
 
+from google.auth.transport import requests
+from google.oauth2 import id_token
 from jose import jwt
 from passlib.context import CryptContext
-
-SECRET_KEY = os.environ["SECRET_KEY"]
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -24,14 +24,15 @@ def get_password_hash(raw_password: str) -> str:
     return pwd_context.hash(raw_password)
 
 
-def create_token(data: dict) -> str:
-    return jwt.encode(data, SECRET_KEY, algorithm="HS256")
-
-
-def decode_token(token: str, google_token: bool = False) -> dict:
-    secret_key = os.environ["GOOGLE_PUBLIC_KEY"] if google_token else SECRET_KEY
-    return jwt.decode(
-        token,
-        secret_key,
-        audience=os.environ["GOOGLE_CLIENT_ID"] if google_token else None,
+def decode_google_token(token: str) -> dict:
+    return id_token.verify_oauth2_token(
+        token, requests.Request(), os.environ["GOOGLE_CLIENT_ID"]
     )
+
+
+def create_token(data: dict) -> str:
+    return jwt.encode(data, os.environ["SECRET_KEY"], algorithm="HS256")
+
+
+def decode_token(token: str) -> dict:
+    return jwt.decode(token, os.environ["SECRET_KEY"])

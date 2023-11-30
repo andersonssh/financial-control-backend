@@ -7,7 +7,7 @@ from app.core import database
 from app.models.registers import (GetRegistersModel, PatchRegisterModel,
                                   RegisterBaseModel, RegisterModel)
 from app.models.users import Users as User
-from app.routers.auth_module import get_current_user
+from app.routers.auth.module import get_current_user
 
 router = APIRouter(tags=["users"])
 

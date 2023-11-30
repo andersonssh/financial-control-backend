@@ -11,6 +11,8 @@ pymongo = {extras = ["srv"], version = "*"}
 python-jose = {extras = ["cryptography"], version = "*"}
 passlib = {extras = ["bcrypt"], version = "*"}
 pydantic = {extras = ["email"], version = "*"}
+google-auth = "*"
+requests = "*"
 
 [dev-packages]
 pytest = "*"
