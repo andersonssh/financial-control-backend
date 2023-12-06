@@ -9,6 +9,11 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",
 ]
-app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 app.include_router(registers.router)
 app.include_router(auth_route.router)

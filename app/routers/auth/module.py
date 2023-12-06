@@ -56,7 +56,7 @@ def create_user(
         password=auth.get_password_hash(password) if password else None,
         google_sub=google_sub,
     )
-    database.insert_one("users", user.model_dump(by_alias=True))
+    database.insert_one("users", user.model_dump(by_alias=True, exclude_none=True))
     return user
 
 
