@@ -17,3 +17,8 @@ app.add_middleware(
 )
 app.include_router(registers.router)
 app.include_router(auth_route.router)
+
+
+@app.get("/")
+def main_route():
+    return {}
