@@ -8,7 +8,8 @@ app = FastAPI()
 
 origins = [
     "http://localhost:5173",
-    "https://finantrol.com"
+    "https://finantrol.com",
+    "https://finantrol-mu.vercel.app"
 ]
 app.add_middleware(
     CORSMiddleware,
