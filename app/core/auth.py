@@ -11,7 +11,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def create_user_access_token(user_email: str, expires_delta: timedelta = None) -> str:
     to_encode = {"email": user_email}
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=300))
+    expire = datetime.now().replace(hour=5, minute=0, second=0, microsecond=0)
+    if expire <= datetime.now() + timedelta(hours=3):
+        expire += timedelta(days=1)
     to_encode["exp"] = expire
     return create_token(to_encode)
 
