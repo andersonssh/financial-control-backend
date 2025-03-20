@@ -34,9 +34,9 @@ async def log_request(request: Request, call_next):
             user_data = auth.decode_token(token)
             logger.info(f"{request.method} {request.url.path} - user: {user_data.get('email')} - status: {response.status_code} - time: {process_time:.2f}s")
         else:
-            logger.info(f"{request.method} {request.url.path} - user: anonymous - status: {response.status_code} - time: {process_time:.2f}s")
+            logger.info(f"{request.method} {request.url.path} status: {response.status_code} - time: {process_time:.2f}s")
     except Exception:
-        logger.info(f"{request.method} {request.url.path} - user: anonymous - status: {response.status_code} - time: {process_time:.2f}s")
+        logger.info(f"{request.method} {request.url.path} status: {response.status_code} - time: {process_time:.2f}s")
     
     return response
 
