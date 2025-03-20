@@ -17,9 +17,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173",
-    "https://finantrol.com",
-    "https://finantrol-mu.vercel.app"
+    "https://finantrol.codedevolution.com",
 ]
 app.add_middleware(
     CORSMiddleware,
