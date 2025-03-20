@@ -22,25 +22,26 @@ logger.setLevel(logging.INFO)
 app = FastAPI()
 
 @app.middleware("http")
-async def log_user_email(request: Request, call_next):
+async def log_request(request: Request, call_next):
     start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
     try:
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
             user_data = auth.decode_token(token)
-            response = await call_next(request)
-            process_time = time.time() - start_time
-            logger.info(f"user: {user_data.get('email')} - {request.method} {request.url.path} - status: {response.status_code} - time: {process_time:.2f}s")
-            return response
-    except JWTError:
-        response = await call_next(request)
-        process_time = time.time() - start_time
-        logger.info(f"REM anonymous - {request.method} {request.url.path} - {response.status_code} - {process_time:.2f}s")
-        return response
+            logger.info(f"{request.method} {request.url.path} - user: {user_data.get('email')} - status: {response.status_code} - time: {process_time:.2f}s")
+        else:
+            logger.info(f"{request.method} {request.url.path} - user: anonymous - status: {response.status_code} - time: {process_time:.2f}s")
+    except Exception:
+        logger.info(f"{request.method} {request.url.path} - user: anonymous - status: {response.status_code} - time: {process_time:.2f}s")
+    
+    return response
 
 origins = [
-    "https://finantrol.codedevolution.com",
+    "https://finantrol.codedevolution.com"
 ]
 app.add_middleware(
     CORSMiddleware,
