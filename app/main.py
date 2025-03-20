@@ -1,20 +1,43 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from jose.exceptions import JWTError
-import logging
+import time
 
 from app.routers import registers
 from app.routers.auth import route as auth_route
 from app.core import auth
+import logging
+import socket
+from logging.handlers import SysLogHandler
+import os
+syslog = SysLogHandler(address=(os.getenv("PAPERTRAIL_HOST"), int(os.getenv("PAPERTRAIL_PORT"))))
+format = '%(asctime)s finantrol: %(message)s'
+formatter = logging.Formatter(format, datefmt='%b %d %H:%M:%S')
+syslog.setFormatter(formatter)
 
-# Configurando o sistema de logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("finantrol")
+logger.addHandler(syslog)
+logger.setLevel(logging.INFO)
 
 app = FastAPI()
+
+@app.middleware("http")
+async def log_user_email(request: Request, call_next):
+    start_time = time.time()
+    try:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            user_data = auth.decode_token(token)
+            response = await call_next(request)
+            process_time = time.time() - start_time
+            logger.info(f"user: {user_data.get('email')} - {request.method} {request.url.path} - status: {response.status_code} - time: {process_time:.2f}s")
+            return response
+    except JWTError:
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        logger.info(f"REM anonymous - {request.method} {request.url.path} - {response.status_code} - {process_time:.2f}s")
+        return response
 
 origins = [
     "https://finantrol.codedevolution.com",
@@ -27,24 +50,6 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-@app.middleware("http")
-async def log_user_email(request: Request, call_next):
-    response = await call_next(request)
-    
-    authorization = request.headers.get("Authorization")
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.replace("Bearer ", "")
-        try:
-            payload = auth.decode_token(token)
-            email = payload.get("email")
-            if email:
-                logger.info(f"Request to {request.url.path} by user: {email}")
-        except JWTError:
-            logger.warning(f"Invalid token provided for request to {request.url.path}")
-    else:
-        logger.info(f"Unauthenticated request to {request.url.path}")
-    
-    return response
 
 app.include_router(registers.router)
 app.include_router(auth_route.router)
