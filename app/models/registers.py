@@ -19,28 +19,10 @@ class RegisterEmbeddedModel(BaseModel):
 class RegisterBaseModel(BaseModel):
     description: str
     category: str
-    isPercentage: bool
     isRequired: bool
+    isHidden: bool = False
     value: float | None = None
-    percentageOn: List[RegisterEmbeddedModel] | None = None
-    percentage: confloat(ge=0, le=1) | None = None
     isPaid: bool = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def required_fields(cls, data: Any):
-        if data["isPercentage"]:
-            assert (
-                data.get("percentage") is not None
-            ), 'when isPercentage=true "percentage" must be set'
-            data["value"] = None
-        else:
-            assert (
-                data.get("value") is not None
-            ), 'when isPercentage=false "value" must be set'
-            data["percentageOn"] = None
-            data["percentage"] = None
-        return data
 
 
 class RegisterModel(RegisterBaseModel, SystemBaseModel):
